@@ -1,0 +1,36 @@
+{
+  "name": "unicornglade-playground",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^22.19.0 || ^24.11.0 || >=26.0.0"
+  },
+  "scripts": {
+    "postinstall": "nuxt prepare",
+    "dev": "nuxt dev --host 127.0.0.1",
+    "build": "node scripts/build.mjs",
+    "typecheck": "nuxt typecheck",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:lambda": "node --test tests/lambda.test.mjs",
+    "test:db": "node --import tsx --test tests/integration/database.test.ts",
+    "check": "npm run typecheck && npm test && npm run build && npm run test:lambda",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:migrate": "node --import tsx scripts/migrate.ts",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "h3": "1.15.11",
+    "nuxt": "4.5.2",
+    "pg": "8.23.0",
+    "vue": "3.5.40"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "8.23.1",
+    "tsx": "^4.20.0",
+    "typescript": "5.9.3",
+    "vue-tsc": "3.3.11"
+  }
+}
