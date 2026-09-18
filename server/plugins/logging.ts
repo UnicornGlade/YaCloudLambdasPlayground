@@ -10,7 +10,8 @@ export default defineNitroPlugin((app) => {
   })
   app.hooks.hook('beforeResponse', (event) => {
     console.log(JSON.stringify({
-      level: 'info',
+      level: 'INFO',
+      message: 'http_request',
       event: 'http_request',
       requestId: event.context.requestId,
       method: event.method,
@@ -23,7 +24,8 @@ export default defineNitroPlugin((app) => {
   app.hooks.hook('error', (error, context) => {
     const cause = error.cause as { code?: string } | undefined
     console.error(JSON.stringify({
-      level: 'error',
+      level: 'ERROR',
+      message: 'request_error',
       event: 'request_error',
       requestId: context.event?.context.requestId,
       code: (error as { code?: string }).code || cause?.code || 'UNKNOWN',

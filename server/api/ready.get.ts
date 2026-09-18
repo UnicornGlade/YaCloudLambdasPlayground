@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     await counterValue(getDatabase())
     return { status: 'ready' }
   } catch (error) {
-    console.error(JSON.stringify({ level: 'error', event: 'database_not_ready', requestId: event.context.requestId, code: (error as { code?: string }).code || 'UNKNOWN' }))
+    console.error(JSON.stringify({ level: 'ERROR', message: 'database_not_ready', event: 'database_not_ready', requestId: event.context.requestId, code: (error as { code?: string }).code || 'UNKNOWN' }))
     throw createError({ statusCode: 503, statusMessage: 'Database unavailable' })
   }
 })
