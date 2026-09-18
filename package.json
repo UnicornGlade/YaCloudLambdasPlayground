@@ -18,7 +18,10 @@
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "db:migrate": "node --import tsx scripts/migrate.ts",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "tools:terraform": "node scripts/install-terraform.mjs",
+    "certificate": "node scripts/certificate.mjs",
+    "infra": "node scripts/infra.mjs"
   },
   "dependencies": {
     "h3": "1.15.11",

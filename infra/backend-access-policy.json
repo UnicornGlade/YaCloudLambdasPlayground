@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {"CanonicalUser": "ajev28h57merhi7r168p"},
+      "Action": ["s3:ListBucket", "s3:GetBucketLocation"],
+      "Resource": "arn:aws:s3:::unicornglade-tfstate-b1gh1fk7hbuj5hu9tujb"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {"CanonicalUser": "ajev28h57merhi7r168p"},
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::unicornglade-tfstate-b1gh1fk7hbuj5hu9tujb/terraform/*"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyInsecureTransport",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::unicornglade-tfstate-b1gh1fk7hbuj5hu9tujb",
+        "arn:aws:s3:::unicornglade-tfstate-b1gh1fk7hbuj5hu9tujb/*"
+      ],
+      "Condition": {"Bool": {"aws:SecureTransport": "false"}}
+    },
+    {
+      "Sid": "AllowBootstrapOwner",
+      "Effect": "Allow",
+      "Principal": {"CanonicalUser": "ajev28h57merhi7r168p"},
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::unicornglade-tfstate-b1gh1fk7hbuj5hu9tujb",
+        "arn:aws:s3:::unicornglade-tfstate-b1gh1fk7hbuj5hu9tujb/*"
+      ],
+      "Condition": {"Bool": {"aws:SecureTransport": "true"}}
+    }
+  ]
+}
