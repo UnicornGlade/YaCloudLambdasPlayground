@@ -1,0 +1,67 @@
+openapi: 3.0.0
+info:
+  title: Unicorn Glade playground
+  version: '1.0'
+paths:
+  /:
+    get:
+      operationId: index
+      responses:
+        '200':
+          description: Static SPA entrypoint
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: ${bucket}
+        object: index.html
+    head:
+      operationId: indexHead
+      responses:
+        '200':
+          description: Static SPA entrypoint metadata
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: ${bucket}
+        object: index.html
+  /api/{path+}:
+    parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+    x-yc-apigateway-any-method:
+      operationId: api
+      responses:
+        '200':
+          description: API response
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: ${function_id}
+        tag: live
+        service_account_id: ${service_account_id}
+        payload_format_version: '2.0'
+  /{file+}:
+    parameters:
+      - name: file
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: static
+      responses:
+        '200':
+          description: Static asset
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: ${bucket}
+        object: '{file}'
+    head:
+      operationId: staticHead
+      responses:
+        '200':
+          description: Static asset metadata
+      x-yc-apigateway-integration:
+        type: object_storage
+        bucket: ${bucket}
+        object: '{file}'

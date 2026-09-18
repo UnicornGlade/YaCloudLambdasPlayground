@@ -21,7 +21,10 @@
     "smoke": "node scripts/smoke.mjs",
     "tools:terraform": "node scripts/install-terraform.mjs",
     "certificate": "node scripts/certificate.mjs",
-    "infra": "node scripts/infra.mjs"
+    "infra": "node scripts/infra.mjs",
+    "publish:site": "node scripts/publish-site.mjs",
+    "cloud:status": "node scripts/cloud-read.mjs status",
+    "cloud:logs": "node scripts/cloud-read.mjs logs"
   },
   "dependencies": {
     "h3": "1.15.11",
