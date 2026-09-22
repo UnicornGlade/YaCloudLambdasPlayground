@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
@@ -30,7 +31,7 @@ test('ephemeral backend credentials are scoped to state bucket and object prefix
 })
 
 test('all Terraform modules use HTTPS, native locking and no inline credentials', async () => {
-  for (const module of ['bootstrap', 'certificate', 'application']) {
+  for (const module of ['bootstrap', 'certificate', 'application', 'database']) {
     const hcl = await file(`infra/${module}/versions.tf`)
     assert.match(hcl, /backend "s3"/)
     assert.match(hcl, /use_lockfile\s*=\s*true/)
@@ -47,4 +48,21 @@ test('cloud gateway uses v2 and a private function with bounded scaling', async 
   assert.match(hcl, /zone_instances_limit\s*=\s*1/)
   assert.match(hcl, /retention_period\s*=\s*"24h"/)
   assert.doesNotMatch(hcl, /allUsers|allAuthenticatedUsers|static_access_key|DATABASE_URL/)
+})
+
+test('database plan has private access, deletion protection and server-generated passwords', async () => {
+  const hcl = await file('infra/database/main.tf')
+  assert.match(hcl, /assign_public_ip\s*=\s*false/)
+  assert.match(hcl, /deletion_protection\s*=\s*true/)
+  assert.match(hcl, /disk_type_id\s*=\s*"network-ssd"/)
+  assert.match(hcl, /resource_preset_id\s*=\s*"s3-c2-m8"/)
+  assert.match(hcl, /198\.19\.0\.0\/16/)
+  assert.equal([...hcl.matchAll(/generate_password\s*=\s*true/g)].length, 2)
+  assert.doesNotMatch(hcl, /^\s*(?:password|password_wo)\s*=|0\.0\.0\.0\/0/m)
+})
+
+test('database apply without explicit cost approval fails before cloud access', () => {
+  const result = spawnSync(process.execPath, ['scripts/infra.mjs', 'database', 'apply'], { encoding: 'utf8', timeout: 5000 })
+  assert.equal(result.status, 1)
+  assert.match(result.stderr, /Database apply requires owner approval/)
 })

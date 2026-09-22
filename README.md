@@ -4,7 +4,7 @@
 
 ## Текущий статус
 
-**Первый облачный запуск без БД выполнен.** Сайт: https://d5dnv6ig2a6jhr14ffdf.fovt0b64.apigw.yandexcloud.net — статика и `/api/health` проверены реальными HTTPS-запросами. Счётчик пока недоступен: PostgreSQL ещё не создан. Собственный домен ожидает выпуска сертификата, DNS уже делегирован в Yandex Cloud.
+**Сайт работает по собственному HTTPS-адресу: https://playground.unicornglade.tech.** Сертификат ISSUED; статика и `/api/health` проверены реальными запросами. Счётчик пока недоступен: PostgreSQL ещё не создан. Для БД подготовлен Terraform-план, ожидается согласование обновлённой стоимости.
 
 Реализованы:
 
@@ -19,14 +19,14 @@
 
 Terraform реализован для **DNS и сертификата** (`infra/certificate/`), приватного state backend (`infra/bootstrap/`) и **приложения без БД** (`infra/application/`: бакет статики, приватная функция, шлюз, IAM и логи).
 
-**Следующее:** дождаться сертификата `ISSUED` и подключить собственный домен; затем отдельным этапом создать PostgreSQL. В Руцентре повторно ничего менять не нужно. Результаты и команды: [docs/CLOUD-STAGE1.md](docs/CLOUD-STAGE1.md). Общий план: [docs/DEPLOYMENT-PLAN.md](docs/DEPLOYMENT-PLAN.md).
+**Следующее:** согласовать и создать PostgreSQL по [docs/DATABASE-PLAN.md](docs/DATABASE-PLAN.md). Прежний класс `c4a-c2-m4` не найден API; подготовлен план `s3-c2-m8` (~5 784 ₽/30 дней непрерывно или ~548–939 ₽ при 50–100 часах работы, без остальных сервисов). В Руцентре повторно ничего менять не нужно. Результаты и команды: [docs/CLOUD-STAGE1.md](docs/CLOUD-STAGE1.md). Общий план: [docs/DEPLOYMENT-PLAN.md](docs/DEPLOYMENT-PLAN.md).
 
 ## Что блокирует облачный этап
 
 Текущее состояние:
 
 1. `yc` обновлён до 1.34.0, браузерная авторизация работает; выбран отдельный каталог `lambda-playground-folder`. Для повторного входа использовать актуальный CLI и `yc init --username='<почта Яндекс ID>'`. Новые OAuth-токены Яндекс ID для этого больше не поддерживаются. Не отправлять токены в чат и не добавлять их в Git.
-2. Адрес **подтверждён**: `playground.unicornglade.tech`; также подтверждён перенос DNS всего домена в Yandex Cloud. Новая зона и CNAME сертификата созданы. Из старой зоны сохранены A корня/`www` и TXT GlobalSign. Владелец сменил NS, новые NS и CNAME проверены через внешний DNS. Ожидается сертификат `ISSUED`.
+2. Адрес **подтверждён**: `playground.unicornglade.tech`; также подтверждён перенос DNS всего домена в Yandex Cloud. Новая зона и CNAME сертификата созданы. Из старой зоны сохранены A корня/`www` и TXT GlobalSign. Владелец сменил NS, новые NS и CNAME проверены через внешний DNS. Сертификат `ISSUED`, домен подключён к шлюзу; HTTPS smoke прошёл.
 3. Terraform 1.16.2 установлен локально в `.tools/terraform/`, провайдер 0.228.0 закреплён. State bootstrap, домена и приложения хранится в приватном S3 backend с versioning и проверенной конкурентной блокировкой. Долгоживущие ключи не создавались. См. [docs/TERRAFORM.md](docs/TERRAFORM.md).
 4. Docker установлен, но текущий процесс не имеет доступа к его сокету, и плагин `docker compose` отсутствует. Поэтому интеграционный тест с настоящим PostgreSQL пока не выполнен. Не используйте `chmod 666 /var/run/docker.sock`.
 
@@ -71,10 +71,10 @@ npm run smoke -- --increment  # явно разрешает один реаль�
 npm run smoke -- https://playground.unicornglade.tech
 ```
 
-Последний пример полного smoke начнёт проходить после подключения домена и БД. Сейчас доступна проверка без БД:
+Последний пример полного smoke начнёт проходить после подключения БД. Сейчас доступна проверка без БД:
 
 ```bash
-npm run smoke -- https://d5dnv6ig2a6jhr14ffdf.fovt0b64.apigw.yandexcloud.net --without-db
+npm run smoke -- https://playground.unicornglade.tech --without-db
 npm run cloud:status
 npm run cloud:logs
 ```
@@ -158,7 +158,9 @@ APP_VERSION=v0.1.0 npm run build
 - `scripts/` — локальные операции, сборка и проверка.
 - `deploy/function/index.js` — исходник обёртки для облачного загрузчика.
 - `tests/` — тесты.
-- `infra/application/` — облачный запуск без БД, отдельный S3 state.
+- `infra/database/` — подготовленный, но НЕ применённый план PostgreSQL/VPC.
+- `docs/DATABASE-PLAN.md` — проверенная доступность класса БД, стоимость и условия создания.
+- `infra/application/` — облачный запуск без БД и собственный домен, отдельный S3 state.
 - `docs/CLOUD-STAGE1.md` — действующий адрес, проверки, публикация и read-only диагностика.
 - `infra/bootstrap/` — приватный бакет state.
 - `infra/certificate/` — Terraform DNS-зоны и сертификата; S3 backend.

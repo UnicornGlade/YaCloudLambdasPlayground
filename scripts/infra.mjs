@@ -3,8 +3,12 @@ import { createHash } from 'node:crypto'
 import { cloudEnvironment, root, run } from './lib/cloud-auth.mjs'
 
 const [module, action, ...extra] = process.argv.slice(2)
-if (extra.length || !['bootstrap', 'certificate', 'application'].includes(module) || !['init', 'migrate', 'validate', 'plan', 'apply'].includes(action)) {
-  throw new Error('Usage: npm run infra -- bootstrap|certificate|application init|migrate|validate|plan|apply')
+const databaseApproved = module === 'database' && action === 'apply' && extra.length === 1 && extra[0] === '--approve-database-cost'
+if ((extra.length && !databaseApproved) || !['bootstrap', 'certificate', 'application', 'database'].includes(module) || !['init', 'migrate', 'validate', 'plan', 'apply'].includes(action)) {
+  throw new Error('Usage: npm run infra -- bootstrap|certificate|application|database init|migrate|validate|plan|apply [--approve-database-cost for database apply only]')
+}
+if (module === 'database' && action === 'apply' && !databaseApproved) {
+  throw new Error('Database apply requires owner approval of the updated cost and --approve-database-cost. See docs/DATABASE-PLAN.md.')
 }
 process.umask(0o077)
 const directory = `${root}infra/${module}`
