@@ -25,7 +25,11 @@ const args = {
   apply: ['apply', '-input=false', '-no-color', '-lock-timeout=60s', plan],
 }[action]
 try {
-  const buildDigest = async () => createHash('sha256').update(await readFile(`${root}.artifacts/function.zip`)).digest('hex')
+  const buildDigest = async () => {
+    const hash = createHash('sha256')
+    for (const name of ['function.zip', 'migration.zip', 'release.json']) hash.update(await readFile(`${root}.artifacts/${name}`))
+    return hash.digest('hex')
+  }
   const guard = `${root}.tools/application-plan.sha256`
   if (module === 'application' && action === 'apply' && await buildDigest() !== (await readFile(guard, 'utf8')).trim()) {
     throw new Error('Build changed after plan; generate and review a new plan before apply.')

@@ -4,6 +4,18 @@ import { databaseConfig } from '../server/lib/database-config'
 
 const local = 'postgresql://counter:counter@127.0.0.1:54329/counter'
 
+test('Lockbox-injected password is encoded without weakening TLS', () => {
+  const password = 'test:@/#?%+ chars'
+  const config = databaseConfig({ PGHOST: 'database.internal', PGUSER: 'counter_app', PGPASSWORD: password, PGDATABASE: 'counter' })
+  const url = new URL(config.connectionString!)
+  assert.equal(decodeURIComponent(url.password), password)
+  assert.equal(url.hostname, 'database.internal')
+  assert.equal(url.port, '6432')
+  assert.equal(url.search, '')
+  assert.deepEqual(config.ssl, { rejectUnauthorized: true })
+  assert.throws(() => databaseConfig({ PGHOST: 'database.internal/?sslmode=disable', PGUSER: 'a', PGPASSWORD: password, PGDATABASE: 'counter' }), /Invalid PostgreSQL/)
+})
+
 test('database configuration is mandatory and errors do not expose credentials', () => {
   assert.throws(() => databaseConfig({}), /DATABASE_URL is required/)
   assert.throws(() => databaseConfig({ DATABASE_URL: 'https://user:secret@example.org' }), /must use PostgreSQL/)

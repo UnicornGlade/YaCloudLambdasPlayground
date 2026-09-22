@@ -2,9 +2,14 @@ import { readFileSync } from 'node:fs'
 import type { PoolConfig } from 'pg'
 
 export function databaseConfig(env: NodeJS.ProcessEnv = process.env): PoolConfig {
-  if (!env.DATABASE_URL) throw new Error('DATABASE_URL is required')
+  let connectionString = env.DATABASE_URL
+  if (!connectionString && env.PGHOST && env.PGUSER && env.PGPASSWORD && env.PGDATABASE) {
+    if (!/^[a-zA-Z0-9.-]+$/.test(env.PGHOST) || !/^\d+$/.test(env.PGPORT || '6432')) throw new Error('Invalid PostgreSQL host or port')
+    connectionString = `postgresql://${encodeURIComponent(env.PGUSER)}:${encodeURIComponent(env.PGPASSWORD)}@${env.PGHOST}:${env.PGPORT || '6432'}/${encodeURIComponent(env.PGDATABASE)}`
+  }
+  if (!connectionString) throw new Error('DATABASE_URL is required (or complete PGHOST/PGUSER/PGPASSWORD/PGDATABASE settings)')
   let url: URL
-  try { url = new URL(env.DATABASE_URL) } catch { throw new Error('DATABASE_URL must be a valid PostgreSQL URL') }
+  try { url = new URL(connectionString) } catch { throw new Error('DATABASE_URL must be a valid PostgreSQL URL') }
   if (!['postgres:', 'postgresql:'].includes(url.protocol)) {
     throw new Error('DATABASE_URL must use PostgreSQL')
   }
@@ -20,7 +25,7 @@ export function databaseConfig(env: NodeJS.ProcessEnv = process.env): PoolConfig
     throw new Error('TLS may only be disabled for a loopback database')
   }
   return {
-    connectionString: env.DATABASE_URL,
+    connectionString,
     ssl: mode === 'disable' ? false : {
       rejectUnauthorized: true,
       ...(env.PGSSLROOTCERT ? { ca: readFileSync(env.PGSSLROOTCERT, 'utf8') } : {}),

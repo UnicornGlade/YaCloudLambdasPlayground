@@ -1,14 +1,13 @@
 # Prepared plan only. Do not apply before confirming the revised DB cost.
 locals {
   labels = { project = "lambdas-playground", managed-by = "terraform" }
-  # All zones reported UP by yc compute zone list on 2026-09-22.
-  # Functions require subnets in every availability zone; c is DOWN.
+  # Available zones verified by creation. c is DOWN; k reports UP but
+  # subnet creation is forbidden for this folder (no resource was created).
   subnets = {
     ru-central1-a = "10.77.0.0/24"
     ru-central1-b = "10.77.1.0/24"
     ru-central1-d = "10.77.2.0/24"
     ru-central1-e = "10.77.3.0/24"
-    ru-central1-k = "10.77.4.0/24"
   }
 }
 resource "yandex_vpc_network" "application" {

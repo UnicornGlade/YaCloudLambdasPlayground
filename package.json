@@ -12,7 +12,7 @@
     "build": "node scripts/build.mjs",
     "typecheck": "nuxt typecheck",
     "test": "node --import tsx --test tests/*.test.ts",
-    "test:lambda": "node --test tests/lambda.test.mjs",
+    "test:lambda": "node --test tests/lambda.test.mjs tests/migration-package.test.mjs",
     "test:db": "node --import tsx --test tests/integration/database.test.ts",
     "check": "npm run typecheck && npm test && npm run build && npm run test:lambda",
     "db:up": "docker compose up -d --wait",
@@ -24,7 +24,8 @@
     "infra": "node scripts/infra.mjs",
     "publish:site": "node scripts/publish-site.mjs",
     "cloud:status": "node scripts/cloud-read.mjs status",
-    "cloud:logs": "node scripts/cloud-read.mjs logs"
+    "cloud:logs": "node scripts/cloud-read.mjs logs",
+    "database:cloud": "node scripts/database-cloud.mjs"
   },
   "dependencies": {
     "h3": "1.15.11",

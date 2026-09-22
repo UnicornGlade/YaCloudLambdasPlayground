@@ -26,18 +26,27 @@ resource "yandex_iam_service_account" "gateway" {
   description = "May invoke only the playground function; no administrative roles or keys"
 }
 resource "yandex_function" "api" {
-  name              = "playground-api"
-  folder_id         = var.folder_id
-  description       = "Nuxt Nitro API, stage 1 without PostgreSQL"
-  labels            = local.labels
-  runtime           = "nodejs22"
-  entrypoint        = "index.handler"
-  memory            = 256
-  execution_timeout = "10"
-  concurrency       = 1
-  user_hash         = filesha256("${path.module}/../../.artifacts/function.zip")
-  tags              = ["live"]
-  environment       = { APP_VERSION = local.release.version, NODE_ENV = "production" }
+  name               = "playground-api"
+  folder_id          = var.folder_id
+  description        = "Nuxt Nitro API with private PostgreSQL over verified TLS"
+  labels             = local.labels
+  runtime            = "nodejs22"
+  entrypoint         = "index.handler"
+  memory             = 256
+  execution_timeout  = "10"
+  concurrency        = 1
+  user_hash          = filesha256("${path.module}/../../.artifacts/function.zip")
+  tags               = ["live"]
+  service_account_id = yandex_iam_service_account.runtime.id
+  environment        = merge(local.pg_environment, { APP_VERSION = local.release.version, NODE_ENV = "production", PGUSER = "counter_app" })
+  connectivity { network_id = local.database_network_id }
+  secrets {
+    id                   = "e6qi51jusqq56du1nq3c"
+    version_id           = "e6qvia4co0k02m4e1lti"
+    key                  = "postgresql_password"
+    environment_variable = "PGPASSWORD"
+  }
+  depends_on = [yandex_lockbox_secret_iam_binding.application_password]
   content { zip_filename = "${path.module}/../../.artifacts/function.zip" }
   log_options {
     log_group_id = yandex_logging_group.application.id
@@ -76,7 +85,7 @@ resource "yandex_function_scaling_policy" "api" {
 resource "yandex_api_gateway" "site" {
   name              = "playground"
   folder_id         = var.folder_id
-  description       = "Static Nuxt SPA + private Cloud Function; no database yet"
+  description       = "Static Nuxt SPA + private Cloud Function + PostgreSQL"
   labels            = local.labels
   execution_timeout = "15"
   spec = templatefile("${path.module}/gateway.yaml.tftpl", {
