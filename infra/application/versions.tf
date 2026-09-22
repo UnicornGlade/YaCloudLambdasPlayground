@@ -29,5 +29,5 @@ variable "folder_id" { type = string }
 variable "domain" { type = string }
 variable "enable_custom_domain" {
   type    = bool
-  default = false
+  default = true
 }

@@ -12,7 +12,7 @@
 - копии обнаруженных существующих A-записей корня и `www`, а также TXT GlobalSign;
 - приватный служебный бакет для Terraform state с версионированием. State сертификата/DNS и bootstrap перенесён туда, блокировка проверена конкурентным тестом.
 
-**Владелец уже сменил NS в Руцентре.** Новые NS и CNAME подтверждены через Google DNS-over-HTTPS. Сертификат пока остаётся `VALIDATING`: его проверка может занимать от часов до дней. Приложение без БД уже развёрнуто на техническом адресе API Gateway; PostgreSQL ещё не создан. См. [CLOUD-STAGE1.md](CLOUD-STAGE1.md).
+**Владелец уже сменил NS в Руцентре.** Новые NS и CNAME подтверждены через Google DNS-over-HTTPS. 22 сентября сертификат уже `ISSUED`, домен привязан к шлюзу, HTTPS на https://playground.unicornglade.tech проверен. Приложение без БД доступно и по собственному, и по техническому адресу; PostgreSQL ещё не создан. См. [CLOUD-STAGE1.md](CLOUD-STAGE1.md).
 
 ## Что нажать в Руцентре
 
@@ -70,7 +70,7 @@ dig +short CNAME _acme-challenge.playground.unicornglade.tech
 
 ## Сайт подключим следующим шагом
 
-API Gateway уже создан: `d5dnv6ig2a6jhr14ffdf.fovt0b64.apigw.yandexcloud.net`. После выпуска сертификата включим `enable_custom_domain` в `infra/application/`, добавим через Terraform запись `playground.unicornglade.tech → служебный домен шлюза` и привяжем сертификат. Сейчас отсутствие работающего сайта по собственному домену ожидаемо; технический HTTPS-адрес уже работает.
+API Gateway уже создан: `d5dnv6ig2a6jhr14ffdf.fovt0b64.apigw.yandexcloud.net`. После выпуска сертификата включён `enable_custom_domain` в `infra/application/`, через Terraform добавлена запись `playground.unicornglade.tech → служебный домен шлюза` и привязан сертификат. Оба HTTPS-адреса работают; счётчик пока недоступен без БД.
 
 Корневой домен и `www` пока остаются на прежнем IP. Для их изменения потребуется отдельное подтверждение.
 
