@@ -8,7 +8,7 @@
 - `infra/certificate/`: существующий сертификат, публичная зона `unicornglade.tech.` и DNS-записи.
 - Оба state перенесены из local backend в S3. Старые локальные `.tfstate.backup` — только резервные копии, не актуальный источник состояния; не публиковать и не загружать поверх актуального state.
 
-`infra/application/` теперь описывает запуск приложения без БД: бакет сайта, функцию, API Gateway, IAM, scaling policy и логи. State — `terraform/application.tfstate`. Реальная проверка и публикация описаны в [CLOUD-STAGE1.md](CLOUD-STAGE1.md). Managed PostgreSQL, VPC для него и бакет архивов ещё не созданы.
+`infra/application/` описывает приложение, приватный мигратор, IAM/Lockbox и шлюз; `infra/database/` — созданные VPC/PostgreSQL. State раздельный: `terraform/application.tfstate` и `terraform/database.tfstate`. Пароли генерируются сервером и не читаются Terraform. Текущий результат: [DATABASE-STATUS.md](DATABASE-STATUS.md), первый этап: [CLOUD-STAGE1.md](CLOUD-STAGE1.md). Бакет архивов ещё не создан.
 
 ## Авторизация
 

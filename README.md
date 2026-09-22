@@ -4,7 +4,7 @@
 
 ## Текущий статус
 
-**Сайт работает по собственному HTTPS-адресу: https://playground.unicornglade.tech.** Сертификат ISSUED; статика и `/api/health` проверены реальными запросами. Счётчик пока недоступен: PostgreSQL ещё не создан. Для БД подготовлен Terraform-план, ожидается согласование обновлённой стоимости.
+**PostgreSQL создан, миграции выполнены, приложение подключено по TLS. Сейчас БД STOPPED для экономии между занятиями.** Домен: https://playground.unicornglade.tech. Чтение счётчика проверено реальным IAM-вызовом функции; полный HTTPS smoke после подключения БД и инкремент пока не прошли из-за TLS-сбоев из текущего окружения. Подробности: [docs/DATABASE-STATUS.md](docs/DATABASE-STATUS.md).
 
 Реализованы:
 
@@ -17,9 +17,9 @@
 - сборка статики отдельно от ZIP-функции; CommonJS-обёртка для Yandex;
 - unit-тесты, тест настоящей Lambda-сборки и отдельный интеграционный тест PostgreSQL.
 
-Terraform реализован для **DNS и сертификата** (`infra/certificate/`), приватного state backend (`infra/bootstrap/`) и **приложения без БД** (`infra/application/`: бакет статики, приватная функция, шлюз, IAM и логи).
+Terraform реализован для **DNS и сертификата** (`infra/certificate/`), приватного state backend (`infra/bootstrap/`) и **приложения с PostgreSQL** (`infra/application/`: статика, API, приватный мигратор, шлюз, IAM/Lockbox и логи; `infra/database/`: VPC и БД).
 
-**Следующее:** согласовать и создать PostgreSQL по [docs/DATABASE-PLAN.md](docs/DATABASE-PLAN.md). Прежний класс `c4a-c2-m4` не найден API; подготовлен план `s3-c2-m8` (~5 784 ₽/30 дней непрерывно или ~548–939 ₽ при 50–100 часах работы, без остальных сервисов). В Руцентре повторно ничего менять не нужно. Результаты и команды: [docs/CLOUD-STAGE1.md](docs/CLOUD-STAGE1.md). Общий план: [docs/DEPLOYMENT-PLAN.md](docs/DEPLOYMENT-PLAN.md).
+**Следующее:** запустить БД, завершить сквозной HTTPS smoke и проверку инкремента, затем релизы/откат. Стоимость PostgreSQL согласована; кластер создан по [docs/DATABASE-PLAN.md](docs/DATABASE-PLAN.md). Прежний класс `c4a-c2-m4` не найден API; создан `s3-c2-m8` (~5 784 ₽/30 дней непрерывно или ~548–939 ₽ при 50–100 часах работы, без остальных сервисов). В Руцентре повторно ничего менять не нужно. Результаты и команды: [docs/CLOUD-STAGE1.md](docs/CLOUD-STAGE1.md). Общий план: [docs/DEPLOYMENT-PLAN.md](docs/DEPLOYMENT-PLAN.md).
 
 ## Что блокирует облачный этап
 
@@ -71,7 +71,15 @@ npm run smoke -- --increment  # явно разрешает один реаль�
 npm run smoke -- https://playground.unicornglade.tech
 ```
 
-Последний пример полного smoke начнёт проходить после подключения БД. Сейчас доступна проверка без БД:
+Для полного smoke БД должна быть запущена. После занятия останавливать её явно:
+
+```bash
+npm run database:cloud -- start
+npm run smoke -- https://playground.unicornglade.tech
+npm run database:cloud -- stop
+```
+
+Когда БД остановлена, можно отдельно проверить доступность статики и ожидаемую неготовность API:
 
 ```bash
 npm run smoke -- https://playground.unicornglade.tech --without-db
@@ -126,7 +134,7 @@ APP_VERSION=v0.1.0 npm run build
 ## Конфигурация и безопасность
 
 - `.env` — только локально, исключён из Git.
-- `DATABASE_URL` — серверный секрет, не `NUXT_PUBLIC_*`. Query-параметры в нём запрещены, чтобы они не переопределяли TLS/host.
+- `DATABASE_URL` — серверный секрет, не `NUXT_PUBLIC_*`. Query-параметры в нём запрещены. В облаке URL собирается только на сервере из PGHOST/PGUSER/PGDATABASE и внедрённого Lockbox PGPASSWORD. Пароли в HCL/state не передаются.
 - В облаке используется TLS с проверкой сертификата: `PGSSLMODE=verify-full`, `PGSSLROOTCERT` — путь к CA Yandex. Отключить TLS разрешено только для localhost.
 - Пул ограничен двумя соединениями на экземпляр функции; в облаке дополнительно ограничим число экземпляров/вызовов.
 - `NUXT_PUBLIC_DOWNLOAD_URL` — публичный HTTPS URL. Он встраивается в статическую сборку: изменение требует пересборки сайта, а не только переменной функции.
@@ -158,9 +166,10 @@ APP_VERSION=v0.1.0 npm run build
 - `scripts/` — локальные операции, сборка и проверка.
 - `deploy/function/index.js` — исходник обёртки для облачного загрузчика.
 - `tests/` — тесты.
-- `infra/database/` — подготовленный, но НЕ применённый план PostgreSQL/VPC.
+- `infra/database/` — созданные PostgreSQL/VPC; кластер останавливаем, не удаляем.
+- `docs/DATABASE-STATUS.md` — результаты реальных проверок, ограничения, start/stop/миграции.
 - `docs/DATABASE-PLAN.md` — проверенная доступность класса БД, стоимость и условия создания.
-- `infra/application/` — облачный запуск без БД и собственный домен, отдельный S3 state.
+- `infra/application/` — API с БД, приватный мигратор, IAM/Lockbox и собственный домен, отдельный S3 state.
 - `docs/CLOUD-STAGE1.md` — действующий адрес, проверки, публикация и read-only диагностика.
 - `infra/bootstrap/` — приватный бакет state.
 - `infra/certificate/` — Terraform DNS-зоны и сертификата; S3 backend.

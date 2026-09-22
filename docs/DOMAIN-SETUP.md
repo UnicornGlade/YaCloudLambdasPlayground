@@ -12,7 +12,7 @@
 - копии обнаруженных существующих A-записей корня и `www`, а также TXT GlobalSign;
 - приватный служебный бакет для Terraform state с версионированием. State сертификата/DNS и bootstrap перенесён туда, блокировка проверена конкурентным тестом.
 
-**Владелец уже сменил NS в Руцентре.** Новые NS и CNAME подтверждены через Google DNS-over-HTTPS. 22 сентября сертификат уже `ISSUED`, домен привязан к шлюзу, HTTPS на https://playground.unicornglade.tech проверен. Приложение без БД доступно и по собственному, и по техническому адресу; PostgreSQL ещё не создан. См. [CLOUD-STAGE1.md](CLOUD-STAGE1.md).
+**Владелец уже сменил NS в Руцентре.** Новые NS и CNAME подтверждены через Google DNS-over-HTTPS. 22 сентября сертификат уже `ISSUED`, домен привязан к шлюзу, HTTPS на https://playground.unicornglade.tech проверен. Это результат первого этапа: [CLOUD-STAGE1.md](CLOUD-STAGE1.md). PostgreSQL уже создан и остановлен между занятиями; в последней сессии публичный HTTPS smoke не прошёл из-за TLS-сбоев. Текущее состояние: [DATABASE-STATUS.md](DATABASE-STATUS.md).
 
 ## Что нажать в Руцентре
 
